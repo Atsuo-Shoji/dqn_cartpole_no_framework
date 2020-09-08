@@ -1,0 +1,10 @@
+.ipynb_checkpoints/
+__pycache__/
+params/
+results/
+4_4_*
+cart_pole_dqn_dev.ipynb
+common/__pycache__/
+GitHub/
+保管庫/
+play_imgs/
