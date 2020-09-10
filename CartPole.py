@@ -5,17 +5,24 @@ from common.tools import *
 
 class Planner:
     
-    def __init__(self, name, env, state_dim=4, action_dim=2, exp_buffer_size=10000):
+    def __init__(self, name, env, state_dim=4, action_dim=2, exp_buffer_size=10000, huber_loss_delta=1.0):
+        
+        #name：このPlannerインスタンスの名前
+        #env：このPlannerインスタンスが対象とする環境
+        #state_dim：このPlannerインスタンスが認識する状態の要素数
+        #action_dim：このPlannerインスタンスが認識する行動の要素数
+        #exp_buffer_size：このPlannerインスタンスが内部で保持する経験バッファが蓄積できる経験データ上限数
+        #huber_loss_delta：Huber損失の定数delta
         
         self._name = name
         self._env = env
         self._state_dim = state_dim
         self._action_dim = action_dim
         
-        self._main_dqn = Planner.Dqn(state_dim=state_dim, action_dim=action_dim)
-        self._target_dqn = Planner.Dqn(state_dim=state_dim, action_dim=action_dim)
+        self._main_dqn = Planner.Dqn(state_dim=state_dim, action_dim=action_dim, huber_loss_delta=huber_loss_delta)
+        self._target_dqn = Planner.Dqn(state_dim=state_dim, action_dim=action_dim, huber_loss_delta=huber_loss_delta)
         #最初に両者のパラメーターを同一にしておく（ただし特にそうする必要は無い）
-        self._copy_learnable_params_to(self._main_dqn, self._target_dqn)
+        self._copy_params_to(self._main_dqn, self._target_dqn)
         
         #train()を複数回実行してもちゃんとシームレスに訓練が継続するように、経験バッファはメンバー変数とする。
         self._exp_buffer = Planner.ExperienceBuffer(exp_buffer_size, state_dim=state_dim, action_dim=action_dim)
@@ -25,9 +32,9 @@ class Planner:
         
         
     def train(self, 
-             episodes, episodes_stop_success=5, episodes_main_params_copy=1, reward_type=0, 
+             episodes, episodes_stop_success, episodes_main_params_copy=1, reward_type=0, 
              steps_per_episode=200, steps_warm_up=10, steps_success_over=160, steps_multi_step_lern=1, 
-             gamma=0.9, epsilon_start=1.0, epsilon_end=0.01, epsilon_decay_rate=0.001, batch_size=32, verbose=True):
+             gamma=0.99, epsilon_start=1.0, epsilon_end=0.01, epsilon_decay_rate=0.001, batch_size=32, verbose=True):
         
         #episodes：試行するエピソード回数。
         #episodes_stop_success：何回エピソードが成功すれば訓練を終了するか。
@@ -285,13 +292,13 @@ class Planner:
             #mainのパラメーターをtargetのパラメーターにコピー
             if (ep+1)%episodes_main_params_copy==0 or ep==(episodes-1):
                 #指定エピソード回数おきに、又は最終エピソードで、コピー
-                self._copy_learnable_params_to(self._main_dqn, self._target_dqn)                
+                self._copy_params_to(self._main_dqn, self._target_dqn)                
             
             if episode_count_success >= episodes_stop_success:
                 #成功エピソード数が指定のエピソード回数に達した。
                 #エピソード反復を中止し、訓練を終了する。
                 #既定成功エピソード数に達し、最終エピソードとなったので、targetにmainのパラメーターをコピー
-                self._copy_learnable_params_to(self._main_dqn, self._target_dqn) 
+                self._copy_params_to(self._main_dqn, self._target_dqn) 
                 episode_count+=1
                 break
                 
@@ -301,7 +308,7 @@ class Planner:
         
         #現在のmain_dqnの一時退避済パラメータを正式採用する。
         if verbose==True:
-            print("全エピソード終了　ベストステップ数更新時に一時退避した訓練済パラメーターを正式採用")
+            print("\n全エピソード終了　ベストステップ数更新時に一時退避した訓練済パラメーターを正式採用")
         self._main_dqn.adopt_all_learnable_params_kept_temporarily()                
                 
         result = {}
@@ -333,9 +340,9 @@ class Planner:
     def _calc_target_of_a_series_of_exps_multi_steps(self, list_a_series_of_exps_multi_steps, steps_multi_step_lern, gamma):
         #multi step learning対応　main_dqnに充当する教師データの算出。
         #Σ_k=1..n(γ^(k-1)*r_t+k) + γ^n*max_a(Q(S_t+n, a))
-        #list_a_series_of_exps_multi_steps：1個の時系列経験データ（tuple）のlist
-        #　例：multi step learningでn=3の場合、 3個の経験データ（tuple）が時系列で並んでいるlist
-        #　　※必ずしも3個有るとは限らない。エピソード終端に達していた場合、2個目や1個目で終わっている。
+        #list_a_series_of_exps_multi_steps：1個の時系列経験データ（tuple）のlist1個
+        #　例：multi step learningでn=3の場合、 3個の経験データ（tuple）が時系列で並んでいるlist1個
+        #　　※list内の経験データが必ずしも3個あるとは限らない。エピソード終端に達していた場合、2個目や1個目で終わっている。
         
         reward_discounted_sum = 0
         Q_target_max = 0
@@ -401,14 +408,14 @@ class Planner:
         
         return best_action            
     
-    def _copy_learnable_params_to(self, from_dqn, to_dqn):
+    def _copy_params_to(self, from_dqn, to_dqn):
         
-        #fromのdqnからlearnableな全パラメーターをコピーして取得
-        all_learnable_params = from_dqn.copy_all_learnable_params()
+        #fromのdqnから全パラメーターをコピーして取得
+        all_params = from_dqn.copy_all_params()
         #それをtoのdqnに上書き
-        to_dqn.overwrite_all_learnable_params(all_learnable_params)
+        to_dqn.overwrite_all_params(all_params)
         
-    def save_learnable_params_in_file(self, file_dir, file_name=""):
+    def save_params_in_file(self, file_dir, file_name=""):
         #このモデルインスタンスの全learnableパラメーターをファイル保存する。
         
         if file_name=="":
@@ -416,28 +423,49 @@ class Planner:
         
         file_path = file_dir + file_name
         
-        self._main_dqn.save_all_learnable_params_in_file(file_path)
+        self._main_dqn.save_all_params_in_file(file_path)
         
         return file_name
         
-    def overwrite_learnable_params_in_file(self, file_path):
-        #このモデルインスタンスの全learnableパラメーターを、ファイル保存されている別の物に差し替える。
+    def overwrite_params_in_file(self, file_path):
+        #このモデルインスタンスの全パラメーターを、ファイル保存されている別の物に差し替える。
         
-        self._main_dqn.overwrite_all_learnable_params_in_file(file_path)        
+        self._main_dqn.overwrite_all_params_in_file(file_path)        
     
     @property
     def name(self):
         return self._name
+    
+    @name.setter
+    def name(self, name):
+        self._name = name
+    
+    @property
+    def env(self):
+        return self._env
+    
+    @property
+    def state_dim(self):
+        return self._state_dim
+    
+    @property
+    def action_dim(self):
+        return self._action_dim
     
     @property
     def count_experiences_in_buffer(self):
         #経験バッファの経験データ保持数
         return self._exp_buffer.count
     
+    @property
+    def huber_loss_delta(self):
+        #mainのhuber_loss_deltaを返す。
+        return self._main_dqn.huber_loss_delta
+    
         
     class Dqn:
 
-        def __init__(self, state_dim, action_dim): #envを受け付ける必要は無い
+        def __init__(self, state_dim, action_dim, huber_loss_delta):
 
             #state_dim：stateの要素数
             #action_dim：actionの種類数
@@ -485,7 +513,7 @@ class Planner:
             self._layers[relu_afn3.name] = relu_afn3
             prev_layer = relu_afn3
 
-            #⑤Affine 「afn4」　instance of Affine　順伝播のpredict出力
+            #⑥Affine 「afn4」　instance of Affine　順伝播のpredict出力
             opt_afn4 = Adam(lr=0.001, rho1=0.9, rho2=0.999)
             afn4 = Affine(name="afn4", input_shape=prev_layer.output_shape, output_shape=(self._action_dim,), optimizer=opt_afn4, 
                           init_weight_option="xavier")
@@ -493,48 +521,66 @@ class Planner:
             prev_layer = afn4
 
             #＜最終loss＞　instance of HuberLoss　loss算出
-            self._last_loss_layer = HuberLoss(name="last_loss", input_shape=prev_layer.output_shape, delta=1.0) 
-            #self._layersに含めないことに注意。
+            self._last_loss_layer = HuberLoss(name="last_loss", input_shape=prev_layer.output_shape, delta=huber_loss_delta) 
+            self._layers[self._last_loss_layer.name] = self._last_loss_layer
+            
 
-        def copy_all_learnable_params(self):
+        def copy_all_params(self):
 
-            #Dictionaryにして返す。keyはtrainableなlayer.name。
+            #Dictionaryにして返す。keyはlayer.name。
+            #last_loss_layerにも対応することにした。last_loss_layerのパラメーターはlearnableではないし、last_loss_layer自体trainableではない。
+            #名前が混乱する。
             #all_learnable_params(Dictionary)
             # --learnable layer1の全learnableなパラメーターのtuple(weightsのndarray, biasesのndarray)
             # --learnable layer2の全learnableなパラメーターのtuple(weightsのndarray, biasesのndarray)
             #　・
             #　・
+            #--last_loss_layerの全パラメーターのtuple(HuberLossだけなのでdelta)
 
             all_learnable_params_dic = {}
+            
+            #trainableな全layerのlearnableなパラメーター分
             for layer in self._layers.values():
                 if layer.trainable == True:
                     learnable_params_tpl = layer.copy_learnable_params()
                     all_learnable_params_dic[layer.name] = learnable_params_tpl
+            
+            #last_loss_layerのパラメーター分
+            #現時点ではHuberLossクラスのみであるが、それなりに拡張性を考慮する。
+            all_learnable_params_dic[self._last_loss_layer.name] = self._last_loss_layer.copy_params()
 
             return all_learnable_params_dic        
 
-        def overwrite_all_learnable_params(self, all_learnable_params_dic):
+        def overwrite_all_params(self, all_params_dic):
 
-            for layer_name in all_learnable_params_dic.keys():
+            for layer_name in all_params_dic.keys():
 
                 #上書きするパラメーターをLayer毎に取り出す
-                layer_params_tpl = all_learnable_params_dic[layer_name] 
+                layer_params_tpl = all_params_dic[layer_name] 
 
                 #コピー先Layer毎に上書きする。
-                #名前が同じでtrainableなLayerがコピー先Layer。
+                #名前が同じLayerがコピー先Layer。
                 to_layer = self._layers[layer_name]
-                if to_layer is None or to_layer.trainable==False:
+                
+                if to_layer is None:
                     #ありえない。異常事態。
                     err_msg = "コピー先に対象となるLayerがありません。" + layer_name
                     raise ValueError(err_msg)
-                #上書き
-                to_layer.overwrite_learnable_params(layer_params_tpl)
+                
+                if to_layer.trainable==True:
+                    #learnableなLayer　上書き
+                    to_layer.overwrite_learnable_params(layer_params_tpl)
+                    
+                if to_layer.last_loss_layer==True:
+                    #last_loss_layer
+                    #現時点ではHuberLossクラスのみであるが、それなりに拡張性を考慮する。
+                    to_layer.overwrite_params(layer_params_tpl)                   
 
 
         def fit(self, states, targets, epochs=1, batch_size=32, weight_decay_lmd=0):
 
             #states : 訓練データの入力側。状態State。
-            #targets : 訓練データの出力側教師データ。Q値。   
+            #targets : 訓練データの出力側教師データ。   
 
             num_states = states.shape[0]
             iters_per_epoch = np.ceil(num_states / batch_size).astype(np.int) #1エポックでのイテレーション数        
@@ -564,11 +610,14 @@ class Planner:
 
                     #逆伝播
                     dout = 1 #誤差逆伝播のスタートでの勾配は必ず1
-                    dout = self._last_loss_layer.backward(dout)        
                     layers = list(self._layers.values())
                     layers.reverse()
                     for layer in layers:
-                        dout = layer.backward(dout)
+                        if layer.last_loss_layer==True:
+                            #forループ1回目は、self._layersの一番後ろのこのlast_loss_layerのはず。
+                            dout = self._last_loss_layer.backward(dout) 
+                        else:
+                            dout = layer.backward(dout)
 
                     # 学習パラメーターの更新
                     self._update_all_learnable_params(weight_decay_lmd)
@@ -598,13 +647,6 @@ class Planner:
 
             return loss
 
-        def _update_all_learnable_params(self, weight_decay_lmd):
-            #trainableな全Layersのtrainableなパラメーターを一括更新する。
-
-            for layer in self._layers.values():
-                if layer.trainable == True:
-                    layer.update_learnable_params(weight_decay_lmd)
-
         def _predict_Qs(self, states, train_flg, batch_size):
             #クラス内部用のprivate関数。train()からミニバッチ順伝播で呼ばれる。
             #戻り値のshapeは必ず(stateの個数, self._state_dim)。stateの個数が1であってもこのshapeとする。
@@ -616,7 +658,12 @@ class Planner:
             def __predict(x, train_flg): 
 
                 for layer in self._layers.values():
-                    x = layer.forward(x, train_flg)            
+                    if layer.last_loss_layer==True:
+                        #順伝播予測ではlossの計算はしない。
+                        #最終のlossのlayerに到達したが、もう計算しないのでbreak
+                        break
+                    else:
+                        x = layer.forward(x, train_flg)            
                 return x
             #順伝播予測の本体　終わり
 
@@ -648,7 +695,7 @@ class Planner:
             #与えられたstate1個で推測されたQ値1個の中の（action_dim個あるうちの）、最大数値を返す。
             #shapeはスカラー。
 
-            #順伝播時は、必ず直接でも間接でもprivateのpredict_Qs()を呼ぶこと。
+            #順伝播時は、必ず直接でも間接でもprivateの_predict_Qs()を呼ぶこと。
             Q = self.predict_Q(a_state) #shapeは(self._action_dim, )
             maxQ = np.amax(Q)
 
@@ -657,24 +704,31 @@ class Planner:
         def predict_best_action(self, a_state):
             #与えられたstate1個でのbestなactionを推測して返す。
 
-            #順伝播時は、必ず直接でも間接でもprivateのpredict_Qs()を呼ぶこと。
+            #順伝播時は、必ず直接でも間接でもprivateの_predict_Qs()を呼ぶこと。
             Q = self.predict_Q(a_state) #shapeは(self._action_dim, )
             best_action = np.argmax(Q) 
 
             return best_action
         
-        def save_all_learnable_params_in_file(self, file_path):
-            #全learnableの全learnableパラメーターをファイル保存する。
+        def save_all_params_in_file(self, file_path):
+            #全learnableの全learnableパラメーターとlast_loss_layerのパラメーターをファイル保存する。
             
-            param_layer_tpls_dic = self.copy_all_learnable_params()            
+            param_layer_tpls_dic = self.copy_all_params()            
             save_pickle_file(param_layer_tpls_dic, file_path)
 
-        def overwrite_all_learnable_params_in_file(self, file_path):
-            #ファイル保存した全learnableの全learnableパラメーターを読み込んで、利用可能にする。
+        def overwrite_all_params_in_file(self, file_path):
+            #ファイル保存した全learnableの全learnableパラメーターとlast_loss_layerのパラメーターを読み込んで、利用可能にする。
             
             param_layer_tpls_dic = read_pickle_file(file_path)
-            self.overwrite_all_learnable_params(param_layer_tpls_dic)
-            
+            self.overwrite_all_params(param_layer_tpls_dic)
+        
+        def _update_all_learnable_params(self, weight_decay_lmd):
+            #trainableな全Layersのtrainableなパラメーターを一括更新する。
+
+            for layer in self._layers.values():
+                if layer.trainable == True:
+                    layer.update_learnable_params(weight_decay_lmd)
+
         def keep_temporarily_all_learnable_params(self):
 
             #配下の各trainableなLayerに対し、現時点でのtrainableパラメーターの一時退避を指示
@@ -700,6 +754,14 @@ class Planner:
 
             return sum_of_weights_square 
 
+        @property
+        def huber_loss_delta(self):
+            #last_loss_layerはHuberLossクラスと限定
+            if  isinstance(self._last_loss_layer, HuberLoss):
+                return self._last_loss_layer.delta
+            else:
+                return None
+        
 
     class ExperienceBuffer:
 

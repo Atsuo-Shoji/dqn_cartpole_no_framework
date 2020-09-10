@@ -63,6 +63,10 @@ class Layer:
         return False
     
     @property
+    def last_loss_layer(self):
+        raise NotImplementedError("last_loss_layerはオーバーライドしてください。")
+    
+    @property
     def optimizer(self):
         if self.trainable==True:
             raise NotImplementedError("trainableなクラスでは、optimizerはオーバーライドしてください。")
@@ -205,6 +209,10 @@ class Affine(Layer):
         return True
     
     @property
+    def last_loss_layer(self):
+        return False
+    
+    @property
     def optimizer(self):
         return self._opt
     
@@ -227,21 +235,20 @@ class ReLU(Layer):
     def __init__(self, name, input_shape):
         
         self._name = name
-        self._mask = None
+        self._mask_negative_on_x = None
         self._input_shape = input_shape
 
     def forward(self, x, train_flg=False):
         
-        self._mask = (x <= 0)
-        out = x.copy()
-        out[self._mask] = 0
+        self._mask_negative_on_x = (x <= 0)
+        out = x * np.where( self._mask_negative_on_x, 0, 1.0 )
 
         return out
 
     def backward(self, dout):
         
-        dout[self._mask] = 0
-        dx = dout
+        dx = dout * np.where( self._mask_negative_on_x, 0, 1.0 )
+        
         return dx    
     
     @property
@@ -250,6 +257,10 @@ class ReLU(Layer):
        
     @property
     def trainable(self):
+        return False
+    
+    @property
+    def last_loss_layer(self):
         return False
     
     @property
@@ -269,7 +280,7 @@ class ReLU(Layer):
 class HuberLoss(Layer):
     #Huber損失
     #活性化関数+損失計算
-    #実装上は「last_layer」。1個前のAffineには活性化関数は付けない。
+    #実装上は「last_layer」。1個前のAffineには活性化関数は付けないようにする。
     #https://www.wikiwand.com/ja/Huber%E6%90%8D%E5%A4%B1
     #https://axa.biopapyrus.jp/machine-learning/model-evaluation/loss-function.html
     
@@ -299,7 +310,7 @@ class HuberLoss(Layer):
         #①差異の絶対値
         #誤差逆伝播時のために、mask方式を取る。正の数の要素のmaskを取る。
         self._mask_positive_on_diff = (diff >= 0)
-        self._abs_diff = np.where( self._mask_positive_on_diff, diff, (-1.0*diff) )
+        self._abs_diff = diff * np.where( self._mask_positive_on_diff, 1.0, -1.0 )
         
         #誤差逆伝播時のために、以降はabs_diffのみを変数とする。誤差逆伝播時、②は∂L/∂(abs_diff)を途中結果としたい。
         
@@ -310,11 +321,13 @@ class HuberLoss(Layer):
         #deltaより小さい数値の要素は2乗和損失sl
         #2乗和損失slが適用される要素のmaskを取る。
         self._mask_sl_on_abs_diff = (self._abs_diff < self._delta)
+        #maskを適用し、ミニバッチ内の個々のデータのHuber損失を算出する。
+        loss = np.where(self._mask_sl_on_abs_diff, sl, otherwise_l)
         
         #ミニバッチでの損失の平均を取る。
         #ミニバッチ内各データのHuber損失の総和を取ってバッチサイズで割る。
         batch_size = self._y.shape[0]
-        self._loss = np.sum( np.where(self._mask_sl_on_abs_diff, sl, otherwise_l) ) / batch_size
+        self._loss = np.sum(loss) / batch_size
         
         return self._loss
 
@@ -322,13 +335,13 @@ class HuberLoss(Layer):
         
         #②'　∂L/∂(abs_diff)まで
         #順伝播時、2乗和損失slを適用された場合、abs_diffについての微分は、2*abs_diff*0.5=abs_diff
-        #∂L/∂(abs_diff) = 2*abs_diff*0.5 * dout = 1*abs_diff * dout
+        #∂L/∂(abs_diff) = (2*abs_diff*0.5) * dout = abs_diff * dout
         #順伝播時、2乗和損失slではなくその他の損失otherwise_lを適用された場合、abs_diffについての微分はdelta
         #∂L/∂(abs_diff) = delta * dout
-        d_abs_diff = np.where(self._mask_sl_on_abs_diff, 1.0*self._abs_diff*dout, self._delta*dout)
+        d_abs_diff = dout * np.where(self._mask_sl_on_abs_diff, self._abs_diff, self._delta)
         #①'　∂L/∂(diff)
         #順伝播時、単純差異diffの絶対値を取った。diff>=0ならx1、diff<0ならx(-1)で逆伝播する。
-        d_diff = np.where( self._mask_positive_on_diff, 1.0*d_abs_diff, (-1.0*d_abs_diff) )
+        d_diff = d_abs_diff * np.where( self._mask_positive_on_diff, 1.0, -1.0 )
         
         #∂L/∂y
         #順伝播時は単純差異 self._y - t
@@ -343,6 +356,23 @@ class HuberLoss(Layer):
         
         return dx
     
+    def copy_params(self):
+        #パラメーターをコピーして、tupleに詰め込んで返す。
+        #HuberLossクラスにおいては、deltaのみ。
+        
+        copy_of_delta = copy.copy(self._delta)
+        copy_of_params_tpl = (copy_of_delta,) #最後の「,」が無いとtupleと認識されない。
+        
+        return copy_of_params_tpl
+    
+    def overwrite_params(self, params_tpl):
+        #新しいパラメーターのtupleを受けとって上書きする。
+        #HuberLossクラスにおいては、deltaのみ。
+        
+        #deltaの上書き
+        delta = params_tpl[0]        
+        self._delta = delta        
+    
     @property
     def name(self):
         return self._name
@@ -352,12 +382,20 @@ class HuberLoss(Layer):
         return False
     
     @property
+    def last_loss_layer(self):
+        return True
+    
+    @property
     def input_shape(self):
         return self._input_shape
         
     @property
     def output_shape(self):
-        return () #スカラー  
+        return () #スカラー 
+    
+    @property
+    def delta(self):
+        return self._delta
     
 ###損失Layer　終わり###
 
@@ -370,7 +408,7 @@ class Dropout(Layer):
     def __init__(self, name, input_shape, dropout_ratio=0.5):
         
         self.dropout_ratio = dropout_ratio
-        self.mask = None        
+        self._mask_on_x = None        
         self._name = name
         self._input_shape = input_shape
 
@@ -379,14 +417,14 @@ class Dropout(Layer):
         if train_flg==True:
             #np.random.rand(*x.shape)：xと同じ形状で、数値が0.0以上、1.0未満の行列を返す
             #直後にdropout_ratio(0以上1以下)との大小比較をするので、同様に0.0以上、1.0未満の乱数を返すrandでなければならない。
-            self.mask = np.random.rand(*x.shape) > self.dropout_ratio
-            return x * self.mask
+            self._mask_on_x = np.random.rand(*x.shape) > self.dropout_ratio
+            return x * self._mask_on_x
         else:
             #重みスケーリング推論則（weight scaling inference rule）
             return x * (1.0 - self.dropout_ratio)
 
     def backward(self, dout):
-        return dout * self.mask
+        return dout * self._mask_on_x
     
     @property
     def name(self):
@@ -394,6 +432,10 @@ class Dropout(Layer):
     
     @property
     def trainable(self):
+        return False
+    
+    @property
+    def last_loss_layer(self):
         return False
     
     @property
