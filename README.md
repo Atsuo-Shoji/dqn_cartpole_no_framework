@@ -259,6 +259,7 @@ class Plannerのインスタンスを生成する。<br>
 #### 戻り値：<BR>
 - file_name<BR>
 実際の保存ファイル名。
+
 <br>
 
 ### ＜メソッド＞*model_instance*.overwrite_params_in_file(file_path)
@@ -268,21 +269,25 @@ pickleファイルに保存された訓練対象パラメーターとHuber損失
 | 名前 | 型 | 必須/既定値 | 意味 |
 | :---         |     :---:      |     :---:     | :---         |
 |file_path|文字列|必須|保存ファイルのパス（拡張子も含める）。|
+
 <br>
 
 ### ＜getterプロパティ＞*model_instance*.env
 このモデルインスタンスが対象としている環境を返します。<br>
 インスタンス化時に指定された物です。
+
 <br>
 
 ### ＜getterプロパティ＞*model_instance*.state_dim
 このモデルインスタンスが認識している、状態の要素数を返します。<br>
 インスタンス化時に指定された物です。
+
 <br>
 
 ### ＜getterプロパティ＞*model_instance*.action_dim
 このモデルインスタンスが認識している、行動の要素数を返します。<br>
 インスタンス化時に指定された物です。
+
 <br>
 
 ### ＜getter/setterプロパティ＞*model_instance*.name
@@ -296,6 +301,7 @@ setterは、このモデルインスタンスの名前を設定します。<br>
 
 ### ＜getterプロパティ＞*model_instance*.count_experiences_in_buffer
 このモデルインスタンスの経験バッファが保持している経験データ数を返します。
+
 <br>
 
 ### ＜getterプロパティ＞*model_instance*.huber_loss_delta
