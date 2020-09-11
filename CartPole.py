@@ -3,6 +3,8 @@ import numpy as np
 from collections import deque, OrderedDict
 from common.tools import *
 
+#モデル本体
+#方策を決定する
 class Planner:
     
     def __init__(self, name, env, state_dim=4, action_dim=2, exp_buffer_size=10000, huber_loss_delta=1.0):
@@ -462,7 +464,8 @@ class Planner:
         #mainのhuber_loss_deltaを返す。
         return self._main_dqn.huber_loss_delta
     
-        
+    #モデル内部のニューラルネットワーク
+    #class Plannerの内部クラス
     class Dqn:
 
         def __init__(self, state_dim, action_dim, huber_loss_delta):
@@ -529,13 +532,13 @@ class Planner:
 
             #Dictionaryにして返す。keyはlayer.name。
             #last_loss_layerにも対応することにした。last_loss_layerのパラメーターはlearnableではないし、last_loss_layer自体trainableではない。
-            #名前が混乱する。
+            #all_learnable_paramsなんて名前が、混乱を招くものになってしまった。
             #all_learnable_params(Dictionary)
             # --learnable layer1の全learnableなパラメーターのtuple(weightsのndarray, biasesのndarray)
             # --learnable layer2の全learnableなパラメーターのtuple(weightsのndarray, biasesのndarray)
             #　・
             #　・
-            #--last_loss_layerの全パラメーターのtuple(HuberLossだけなのでdelta)
+            # --last_loss_layerの全パラメーターのtuple(HuberLossだけなのでdelta)
 
             all_learnable_params_dic = {}
             
@@ -568,7 +571,7 @@ class Planner:
                     raise ValueError(err_msg)
                 
                 if to_layer.trainable==True:
-                    #learnableなLayer　上書き
+                    #ltrainableなLayer　上書き
                     to_layer.overwrite_learnable_params(layer_params_tpl)
                     
                 if to_layer.last_loss_layer==True:
@@ -762,7 +765,8 @@ class Planner:
             else:
                 return None
         
-
+    #モデル内部の経験バッファ
+    #class Plannerの内部クラス
     class ExperienceBuffer:
 
         def __init__(self, size, state_dim, action_dim):
