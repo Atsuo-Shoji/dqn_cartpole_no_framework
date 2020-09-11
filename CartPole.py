@@ -71,7 +71,7 @@ class Planner:
                 print("\nEpisode:", ep)
             
             #loss_ep = None 各エピソード終了時点でのmain_dqnのloss。はじめは訓練に至らないエピソードもあるので、Noneにすべきだが、
-            #未訓練エピソード分全部Noneだとグラフ表示で横軸がNoneの分だけないので、グラフの横軸左端（エピソード=0）だけ、何か数字を入れる。
+            #未訓練エピソード分全部Noneだとグラフ表示で横軸がNoneの分だけ無くなるので、グラフの横軸左端（エピソード=0）だけ、何か数字を入れる。
             if ep==0:
                 loss_ep = 2
             else:
@@ -711,13 +711,13 @@ class Planner:
             return best_action
         
         def save_all_params_in_file(self, file_path):
-            #全learnableの全learnableパラメーターとlast_loss_layerのパラメーターをファイル保存する。
+            #全learnableパラメーターとlast_loss_layerのパラメーターをファイル保存する。
             
             param_layer_tpls_dic = self.copy_all_params()            
             save_pickle_file(param_layer_tpls_dic, file_path)
 
         def overwrite_all_params_in_file(self, file_path):
-            #ファイル保存した全learnableの全learnableパラメーターとlast_loss_layerのパラメーターを読み込んで、利用可能にする。
+            #ファイル保存した全learnableパラメーターとlast_loss_layerのパラメーターを読み込んで、利用可能にする。
             
             param_layer_tpls_dic = read_pickle_file(file_path)
             self.overwrite_all_params(param_layer_tpls_dic)
@@ -731,20 +731,20 @@ class Planner:
 
         def keep_temporarily_all_learnable_params(self):
 
-            #配下の各trainableなLayerに対し、現時点でのtrainableパラメーターの一時退避を指示
+            #配下の各trainableなLayerに対し、現時点でのlearnableパラメーターの一時退避を指示
             for layer in self._layers.values():
                 if layer.trainable == True:
                     layer.keep_temporarily_learnable_params()
 
         def adopt_all_learnable_params_kept_temporarily(self):
 
-            #配下の各trainableなLayerに対し、一時退避していたtrainableパラメーターの正式採用を指示
+            #配下の各trainableなLayerに対し、一時退避していたlearnableパラメーターの正式採用を指示
             for layer in self._layers.values():
                 if layer.trainable == True:
                     layer.adopt_learnable_params_kept_temporarily()
 
         def _sum_all_weights_square(self):
-            #weightを持つlearnableな全Layerのweightの2乗の総和を返す。
+            #weightを持つtrainableな全Layerのweightの2乗の総和を返す。
             #荷重減衰（weight decay）のため。
 
             sum_of_weights_square = 0
