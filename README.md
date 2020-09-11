@@ -1,3 +1,42 @@
+# Deep Q-Networkをフレームワークを使用せず構築　CartPoleを解く
+
+<br>フレームワークを使用せず、numpyだけでDeep Q-Networkを構築しました。CartPole問題を解いています。<br>
+Multi-step LearningとHuber損失を組み込んでいます。<br>
+<BR>
+| 未訓練モデルでPlay（10ステップ程度ですぐに倒れます） | 訓練済モデルでPlay（上限200ステップいっぱい粘ります） |
+|      :---:       |     :---:      |
+|![beginner_300_450](https://user-images.githubusercontent.com/52105933/92696762-4f02b980-f385-11ea-9aa4-86e5272899ac.gif)|![202009101425_300_450](https://user-images.githubusercontent.com/52105933/92694538-2c22d600-f382-11ea-9a48-646c4ccdc5be.gif)|
+
+## 概要
+フレームワークを使用せず、numpyだけでDeep Q-Networkを構築しました。CartPole問題を解いています。<br>
+Multi-step Learning、Huber損失、Target-QN固定、Experience Replayを組み込んでいます。
+
+###  フレームワークを使用せずnumpyだけで実装
+フレームワークを使用せずにnumpyだけで実装しています。<br>
+Huber損失、誤差逆伝播、その他諸々を自力で0から実装しています。<br>
+動作が軽いです。
+<br><br>
+
+## ディレクトリ構成・動かすのに必要な物
+CartPole.py<BR>
+CartPole_demo.ipynb<BR>
+common/<br>
+&nbsp;└tools.py<br>
+demo_model_params/<br>
+&nbsp;└（デモ用の訓練済パラメーターのpickleファイル）<br>
+※（必要ならば）OpenAI Gym　のインストール（デモ用ノートブックCartPole_demo.ipynbにインストールのコードセルがあり、その実行でもOK）<br>
+-------------<br>
+- CartPole.py：モデル本体。中身はclass Planner です。モデルを動かすにはcommonフォルダが必要です。
+- CartPole_demo.ipynb：デモ用のノートブックです。概要をつかむことが出来ます。このノートブックを動かすにはdemo_model_paramsフォルダが必要です。
+<br>
+
+## 組み込んでいる主な要素
+- Huber損失
+- Multi-step Learning
+- Target-QN固定
+- Experience Replay
+<br>
+
 ###  Huber損失
 本モデルでは、訓練の安定化のため、2乗和損失では無く、Huber損失を採用しています。
 <br><br>
@@ -10,16 +49,15 @@ yを推論値、tを正解値として、
 
 #### Huber損失の計算グラフ：
 順伝播と誤差逆伝播の計算グラフです。手書きですみません・・。<br>
-推論値yと正解値tの誤差の絶対値abs_diffが定数deltaをいくら超えても、最終的な勾配の絶対値は定数deltaに抑えられることが分かります。<BR><br>
+推論値yと正解値tの誤差の絶対値abs_diffが定数deltaをいくら超えても、最終的な勾配の絶対値は定数deltaに抑えられることが分かります。<BR>
 y：推論値　t：正解値
 |\|y - t\|とdeltaの大小関係|勾配| 
 |     :---:     |:---      | 
 |\|y - t\| <= delta|y - t　（2乗和損失と同じ）| 
 |\|y - t\| > delta|delta| 
-
-<br>
  
 ![Huber損失_計算グラフ_加工3_80](https://user-images.githubusercontent.com/52105933/92437696-74a38d80-f1e2-11ea-8178-0887fcda21d4.png)
+
 <br><br>
 
 ### Multi-step Learning
