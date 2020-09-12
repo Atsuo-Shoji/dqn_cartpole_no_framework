@@ -5,11 +5,12 @@ Multi-step LearningとHuber損失を組み込んでいます。<br>
 <BR>
 | 未訓練モデルでPlay（10ステップ程度ですぐに倒れます） | 訓練済モデルでPlay（上限200ステップいっぱい粘ります） |
 |      :---:       |     :---:      |
-|![beginner_300_450](https://user-images.githubusercontent.com/52105933/92696762-4f02b980-f385-11ea-9aa4-86e5272899ac.gif)|![202009101425_300_450](https://user-images.githubusercontent.com/52105933/92694538-2c22d600-f382-11ea-9a48-646c4ccdc5be.gif)|
+|![beginner_300_450](https://user-images.githubusercontent.com/52105933/92696762-4f02b980-f385-11ea-9aa4-86e5272899ac.gif)|![202009121127_300_450_008](https://user-images.githubusercontent.com/52105933/92989792-cb2a0800-f511-11ea-9a23-140799071c0c.gif)|
+
 
 ## 概要
 フレームワークを使用せず、numpyだけでDeep Q-Networkを構築しました。CartPole問題を解いています。<br>
-Multi-step Learning、Huber損失、Target-QN固定、Experience Replayを組み込んでいます。
+Multi-step Learning、Huber損失、Target-QN固定、Experience Replayを組み込んでいます。<br><br>
 
 ###  フレームワークを使用せずnumpyだけで実装
 フレームワークを使用せずにnumpyだけで実装しています。<br>

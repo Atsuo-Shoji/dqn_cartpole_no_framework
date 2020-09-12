@@ -61,6 +61,7 @@ class Planner:
         loss_episodes = []
         step_count_episodes = []
         success_episodes = []
+        reward_episodes = []
         
         #エピソードループ
         episode_count_success = 0
@@ -270,10 +271,11 @@ class Planner:
                     
             #ステップのforループ　終わり
             
-            #いろんな記録
-            step_count_episodes.append(step_count_ep)
-            loss_episodes.append(loss_ep)
-            if success_ep==True:
+            #このエピソードのいろんな記録
+            step_count_episodes.append(step_count_ep) #ステップ数
+            loss_episodes.append(loss_ep) #main_dqnのloss
+            reward_episodes.append(reward) #reward
+            if success_ep==True: #成功/失敗
                 success_episodes.append(1) #Trueでもいいが、グラフ表示の時困るだろう。
             else:
                 success_episodes.append(0) #Falseでもいいが、グラフ表示の時困るだろう。
@@ -320,6 +322,7 @@ class Planner:
         result["step_count_episodes"] = step_count_episodes #1エピソードでのステップ数　履歴
         result["loss_episodes"] = loss_episodes #1エピソードでのmain_dqnのloss　履歴
         result["success_episodes"] = success_episodes #1エピソードでの成功（1）/失敗（0）　履歴
+        result["reward_episodes"] = reward_episodes #1エピソードでのreward　履歴
         result["total_step_count"] = total_step_count #実際のステップ総数
         result["episode_count_success"] = episode_count_success #実際の成功エピソード数
         #以下は主に引数
