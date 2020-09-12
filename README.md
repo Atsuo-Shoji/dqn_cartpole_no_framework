@@ -150,10 +150,10 @@ finally:
     env.close()
 
 #この訓練済モデルインスタンスの訓練済パラメーターの保存
-p_model_instance.save_learnable_params_in_file(hoge, hoge, …)
+p_model_instance.save_params_in_file(hoge, hoge, …)
 
 #別の訓練済パラメーターをこのモデルインスタンスに読み込む
-p_model_instance.overwrite_learnable_params_in_file(hoge, hoge, …)
+p_model_instance.overwrite_params_in_file(hoge, hoge, …)
 ```
 <br><br>
 
