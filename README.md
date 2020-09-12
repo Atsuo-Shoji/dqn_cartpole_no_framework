@@ -106,7 +106,7 @@ CartPole.pyのclass Planner が、モデルの実体です。<br><br>
 ![モデル構成図](https://user-images.githubusercontent.com/52105933/92447938-e552a600-f1f2-11ea-961e-8f8c24277405.png)
 
 このclass Planner をアプリケーション内でインスタンス化して、訓練やCartPoleのPlayといったpublicインターフェースを呼び出す、という使い方をします。<br>
-**Main-QN、Target-QN、経験データを蓄積するExperience BufferはPlanner内部に隠蔽され、外部から利用することはできません。**
+Main-QN、Target-QN、経験データを蓄積するExperience BufferはPlanner内部に隠蔽され、外部から利用することはできません。
 ```
 #モデルのインポート 
 from CartPole import Planner #モデル本体
@@ -132,6 +132,7 @@ try:
             
         #モデルインスタンスが最適な行動を推測
         action_predicted = p_model_instance.predict_best_action(curr_st) 
+        
         #その行動を環境に指示
         next_st, _, done, _ = env.step(action_predicted)
 
