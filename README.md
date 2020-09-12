@@ -226,7 +226,7 @@ class Plannerのインスタンスを生成する。<br>
 
 <br>
 
-#### train()内の処理単位と時間軸：<br>
+#### train()内の流れ：<br>
 訓練開始からsteps_warm_upのステップを実行後、経験バッファに経験データを蓄積し始めます。<br>
 経験バッファにbatch_size分の経験データが蓄積されてから、Main-QNの訓練を始めます。<BR><BR>
 ![train関数処理単位と時間軸2](https://user-images.githubusercontent.com/52105933/92565255-50fd4780-f2b5-11ea-8f4e-365bddd7119f.png)

@@ -523,12 +523,16 @@ class Adam:
         self._iter_count = 0
         
     def update(self, params, grads_params):
+        
+        #params：更新対象のlearnableパラメーターのDictionary。Affine1個に付き「weight」「bias」というkey文字列を持つ。
+        #grads_params：更新対象のlearnableパラメーターの勾配のDictionary。同様にAffine1個に付き「weight」「bias」というkey文字列を持つ。
 
-        if self._iter_count==0:
+        if self._iter_count==0 or (self._m is None or self._v is None):
             #初回のみ mとvを初期化
+            #初期値は0埋め
             
-            self._m = {}
-            self._v = {}
+            self._m = {} #勾配の指数的な移動平均（補正済）
+            self._v = {} #勾配の2乗の指数的な移動平均（補正済）
 
             for key, value in params.items():
                 self._m[key] = np.zeros_like(value)
@@ -536,13 +540,17 @@ class Adam:
                
         for key in params.keys():
             
+            #勾配の指数的な移動平均（補正前）
             self._m[key] = self._rho1*self._m[key] + (1-self._rho1)*grads_params[key] 
+            #勾配の2乗の指数的な移動平均（補正前）
             self._v[key] = self._rho2*self._v[key] + (1-self._rho2)*(grads_params[key]**2)            
             
-            m = self._m[key] / ( 1 - self._rho1**(self._iter_count+1) )
-            v = self._v[key] / ( 1 - self._rho2**(self._iter_count+1) )
+            #勾配の指数的な移動平均mの補正値m^
+            m_h = self._m[key] / ( 1 - self._rho1**(self._iter_count+1) )
+            #勾配の2乗の指数的な移動平均vの補正値v^
+            v_h = self._v[key] / ( 1 - self._rho2**(self._iter_count+1) )
             
-            params[key] -= self._lr * m / (np.sqrt(v) + self._epsilon)
+            params[key] -= self._lr * m_h / (np.sqrt(v_h) + self._epsilon)
             
         self._iter_count += 1
 

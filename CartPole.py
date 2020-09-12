@@ -285,7 +285,7 @@ class Planner:
                 #step_count_ep>=best_step_countの「>=」の「=」：同じ成績でも、後の方がより訓練されているものと推測
                 
                 if verbose==True:
-                    print("ベストステップ数更新　訓練済パラメーター一時退避　step_count_ep:" + str(step_count_ep) + " best_step_count:" + str(best_step_count))
+                    print("最多ステップ数　訓練済パラメーター一時退避　step_count_ep:" + str(step_count_ep) + " best_step_count:" + str(best_step_count))
                 self._main_dqn.keep_temporarily_all_learnable_params()
                 
                 best_step_count = step_count_ep
