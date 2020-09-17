@@ -105,8 +105,8 @@ n=3、即ち3ステップ先の状態のQ値から教師信号を算出する場
 ![step_count_グラフ_mslern123_reward2_all_80](https://user-images.githubusercontent.com/52105933/93418104-938dd800-f8e4-11ea-97f2-d8cb1db138f6.png)
 
 <br>
-報酬のクリッピングをし、Multi-step Learningのnが高いほどが訓練が安定し、且つ効果があるように見えます。<br>
-ただし、全く同一の条件でも、<br>
+報酬のクリッピングをし、Multi-step Learningのnを高くするほどが訓練が安定し、且つ効果があるように見えます。<br>
+ただし、全く同一の条件で訓練しても、<br>
 ・訓練開始から上限ステップ数200に初めて到達するまでの早さ（エピソード数）<br>
 ・上限ステップ数200に到達したエピソード回数<br>
 に変動が毎回あり、<b>一概に報酬のクリッピングをし、Multi-step Learningのnを高くすれば効果がある、とは言えない</b>です。<br>
@@ -243,7 +243,8 @@ class Plannerのインスタンスを生成する。<br>
 #### train()内の流れ：<br>
 訓練開始からsteps_warm_upのステップを実行後、経験バッファに経験データを蓄積し始めます。<br>
 経験バッファにbatch_size分の経験データが蓄積されてから、Main-QNの訓練を始めます。<BR><BR>
-![train関数処理単位と時間軸2](https://user-images.githubusercontent.com/52105933/92565255-50fd4780-f2b5-11ea-8f4e-365bddd7119f.png)
+ ![train関数処理単位と時間軸3](https://user-images.githubusercontent.com/52105933/93423730-97742700-f8f1-11ea-9c78-90edb1793520.png)
+<!--![train関数処理単位と時間軸2](https://user-images.githubusercontent.com/52105933/92565255-50fd4780-f2b5-11ea-8f4e-365bddd7119f.png)-->
 <!--![train関数処理単位と時間軸](https://user-images.githubusercontent.com/52105933/92488826-01be0500-f22a-11ea-911f-7e3bcf635333.png)-->
 
 <BR>
