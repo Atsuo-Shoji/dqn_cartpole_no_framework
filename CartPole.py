@@ -155,10 +155,14 @@ class Planner:
                             #成功時、即時報酬rewardは、step数に応じたものにゲタ(1.0)を履かせる。
                             #失敗時は、報酬は0。
                             reward = 1.0 + (st+1)/steps_success_over
-                        else:
+                        elif reward_type==1:
                             #成功時、即時報酬rewardは、step数に応じたものにゲタ(2.0)を履かせる。
                             #失敗時は、報酬はstep数に応じたものを与える。
                             reward = 2.0 + (st+1)/steps_success_over
+                        elif reward_type==2:
+                            #報酬のクリッピング
+                            #成功時は1
+                            reward = 1
                         episode_count_success += 1
                     else:
                         #このエピソードは”失敗”で終えた
@@ -167,10 +171,14 @@ class Planner:
                             #成功時、即時報酬rewardは、step数に応じたものにゲタ(1.0)を履かせる。
                             #失敗時は、報酬は0。
                             reward = 0
-                        else:
+                        elif reward_type==1:
                             #成功時、即時報酬rewardは、step数に応じたものにゲタ(2.0)を履かせる。
                             #失敗時は、報酬はstep数に応じたものを与える。
                             reward = (st+1)/steps_success_over
+                        elif reward_type==2:
+                            #報酬のクリッピング
+                            #失敗時は-1
+                            reward = -1
                     
                     #next_stateは、「無し」を意味するNoneにする。
                     next_state = None
