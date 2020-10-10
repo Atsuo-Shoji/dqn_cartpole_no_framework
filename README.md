@@ -1,7 +1,7 @@
-# Deep Q-Networkをフレームワークを使用せず構築　CartPoleを解く
+# Deep Q-NetworkでCartPoleを解く（フレームワーク不使用）
 
 <br>フレームワークを使用せず、numpyだけでDeep Q-Networkを構築しました。CartPole問題を解いています。<br>
-Multi-step LearningとHuber損失を組み込んでいます。<br>
+Multi-step LearningやHuber損失などを組み込んでいます。<br>
 <BR>
 | 未訓練モデルでPlay<br>10ステップ程度ですぐに倒れます | 訓練済モデルでPlay<br>上限200ステップいっぱい粘ります<br>（Multi-step Learning n=2で訓練） |
 |      :---:       |     :---:      |

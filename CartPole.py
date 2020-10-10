@@ -156,6 +156,7 @@ class Planner:
                             #失敗時は、報酬は0。
                             reward = 1.0 + (st+1)/steps_success_over
                         elif reward_type==1:
+                            #【廃止】
                             #成功時、即時報酬rewardは、step数に応じたものにゲタ(2.0)を履かせる。
                             #失敗時は、報酬はstep数に応じたものを与える。
                             reward = 2.0 + (st+1)/steps_success_over
@@ -163,6 +164,11 @@ class Planner:
                             #報酬のクリッピング
                             #成功時は1
                             reward = 1
+                        elif reward_type==3:
+                            #【廃止】
+                            #成功時、即時報酬rewardは、step数に応じたものにゲタ(1.0)を履かせる。
+                            #失敗時、即時報酬rewardは、step数に応じたものにゲタ(-1.0)を履かせる。
+                            reward = 1.0 + (st+1)/steps_success_over
                         episode_count_success += 1
                     else:
                         #このエピソードは”失敗”で終えた
@@ -170,8 +176,9 @@ class Planner:
                         if reward_type==0:
                             #成功時、即時報酬rewardは、step数に応じたものにゲタ(1.0)を履かせる。
                             #失敗時は、報酬は0。
-                            reward = 0
+                            reward = 0                            
                         elif reward_type==1:
+                            #【廃止】
                             #成功時、即時報酬rewardは、step数に応じたものにゲタ(2.0)を履かせる。
                             #失敗時は、報酬はstep数に応じたものを与える。
                             reward = (st+1)/steps_success_over
@@ -179,6 +186,11 @@ class Planner:
                             #報酬のクリッピング
                             #失敗時は-1
                             reward = -1
+                        elif reward_type==3:
+                            #【廃止】
+                            #成功時、即時報酬rewardは、step数に応じたものにゲタ(1.0)を履かせる。
+                            #失敗時、即時報酬rewardは、step数に応じたものにゲタ(-1.0)を履かせる。
+                            reward = -1.0 + (st+1)/steps_success_over
                     
                     #next_stateは、「無し」を意味するNoneにする。
                     next_state = None
@@ -320,7 +332,7 @@ class Planner:
         
         #現在のmain_dqnの一時退避済パラメータを正式採用する。
         if verbose==True:
-            print("\n全エピソード終了　ベストステップ数更新時に一時退避した訓練済パラメーターを正式採用")
+            print("\n全エピソード終了　最多ステップ数記録時に一時退避した訓練済パラメーターを正式採用")
         self._main_dqn.adopt_all_learnable_params_kept_temporarily()                
                 
         result = {}
