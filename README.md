@@ -1,36 +1,26 @@
 # Deep Q-NetworkでCartPoleを解く（フレームワーク不使用）
 
-<br>フレームワークを使用せず、numpyだけでDeep Q-Networkを構築しました。CartPole問題を解いています。<br>
+<br>Deep Q-Networkを構築しました。CartPole問題を解いています。<br>
 Multi-step LearningやHuber損失などを組み込んでいます。<br>
+報酬のクリッピングの有無や、Multi-step Learningの長さの違いでの比較を行っています。<br>
+
+フレームワークを使用せず、主にnumpyだけで構築しています。<br>
+
 <BR>
+ 
 | 未訓練モデルでPlay<br>10ステップ程度ですぐに倒れます | 訓練済モデルでPlay<br>上限200ステップいっぱい粘ります<br>（Multi-step Learning n=2で訓練） |
 |      :---:       |     :---:      |
 |![beginner_300_450](https://user-images.githubusercontent.com/52105933/92696762-4f02b980-f385-11ea-9aa4-86e5272899ac.gif)|![202009121127_300_450_008](https://user-images.githubusercontent.com/52105933/92989792-cb2a0800-f511-11ea-9a23-140799071c0c.gif)|
 
 
 ## 概要
-フレームワークを使用せず、numpyだけでDeep Q-Networkを構築しました。CartPole問題を解いています。<br>
-Multi-step Learning、Huber損失、Target-QN固定、Experience Replayを組み込んでいます。<br><br>
+Deep Q-Networkを構築しました。CartPole問題を解いています。<br>
+Multi-step Learning、Huber損失、Target-QN固定、Experience Replayを組み込んでいます。<br>
+報酬のクリッピングの有無や、Multi-step Learningの長さの違いでの比較を行っています。<br>
 
-###  フレームワークを使用せずnumpyだけで実装
-フレームワークを使用せずにnumpyだけで実装しています。<br>
+実装に際しては、フレームワークを使用せず、主にnumpyだけを使用しています。<br>
 Huber損失、誤差逆伝播、その他諸々を自力で0から実装しています。<br>
-動作が軽いです。
-<br><br>
-
-## ディレクトリ構成・動かすのに必要な物
-CartPole.py<BR>
-common/<br>
-&nbsp;└tools.py<br>
------以下、デモ用ノートブック関連-----<br>
-CartPole_demo.ipynb<BR>
-demo_model_params/<br>
-&nbsp;└（デモ用の訓練済パラメーターのpickleファイル）<br>
-※（必要ならば）OpenAI Gym　のインストール（デモ用ノートブックCartPole_demo.ipynbにインストールのコードセルがあり、その実行でもOK）<br>
------------------------------------------------------------------------------------------------------<br>
-- CartPole.py：モデル本体。中身はclass Planner です。モデルを動かすにはcommonフォルダが必要です。
-- CartPole_demo.ipynb：デモ用のノートブックです。概要をつかむことが出来ます。このノートブックを動かすにはdemo_model_paramsフォルダが必要です。
-<br>
+動作が軽いです。<br><br>
 
 ## 組み込んでいる主な要素
 - Huber損失
@@ -114,6 +104,20 @@ n=3、即ち3ステップ先の状態のQ値から教師信号を算出する場
 報酬のクリッピングをした方がやや良くなるものの、Multi-step Learningについてはn=2が一番良いがn=1（Single-step）と大差ないかな、と思っています。
 
 <br><br>
+
+## ディレクトリ構成・動かすのに必要な物
+CartPole.py<BR>
+common/<br>
+&nbsp;└tools.py<br>
+-----以下、デモ用ノートブック関連-----<br>
+CartPole_demo.ipynb<BR>
+demo_model_params/<br>
+&nbsp;└（デモ用の訓練済パラメーターのpickleファイル）<br>
+※（必要ならば）OpenAI Gym　のインストール（デモ用ノートブックCartPole_demo.ipynbにインストールのコードセルがあり、その実行でもOK）<br>
+-----------------------------------------------------------------------------------------------------<br>
+- CartPole.py：モデル本体。中身はclass Planner です。モデルを動かすにはcommonフォルダが必要です。
+- CartPole_demo.ipynb：デモ用のノートブックです。概要をつかむことが出来ます。このノートブックを動かすにはdemo_model_paramsフォルダが必要です。
+<br>
 
 ## モデルの構成
 CartPole.pyのclass Planner が、モデルの実体です。<br><br>
