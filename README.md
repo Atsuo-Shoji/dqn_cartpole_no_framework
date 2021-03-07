@@ -8,9 +8,9 @@ Multi-step LearningやHuber損失などを組み込んでいます。<br>
 
 <BR>
  
-| 未訓練モデルでPlay<br>10ステップ程度ですぐに倒れます | 訓練済モデルでPlay<br>上限200ステップいっぱい粘ります<br>（Multi-step Learning n=2で訓練） |
-|      :---:       |     :---:      |
-|![beginner_300_450](https://user-images.githubusercontent.com/52105933/92696762-4f02b980-f385-11ea-9aa4-86e5272899ac.gif)|![202009121127_300_450_008](https://user-images.githubusercontent.com/52105933/92989792-cb2a0800-f511-11ea-9a23-140799071c0c.gif)|
+| 未訓練モデルでPlay<br>10ステップ程度ですぐに倒れます || DQN訓練済モデルでPlay<br>上限200ステップいっぱい粘ります<br>（Multi-step Learning n=2で訓練） |
+|      :---:       |     :---:      |     :---:      |
+|![beginner_300_450](https://user-images.githubusercontent.com/52105933/92696762-4f02b980-f385-11ea-9aa4-86e5272899ac.gif)|![矢印（赤）](https://user-images.githubusercontent.com/52105933/110228721-b0779f80-7f46-11eb-8cd9-469501beea50.png)|![202009121127_300_450_008](https://user-images.githubusercontent.com/52105933/92989792-cb2a0800-f511-11ea-9a23-140799071c0c.gif)|
 
 
 ## 概要
